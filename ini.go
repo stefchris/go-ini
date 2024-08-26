@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-const (
-	name = "config.ini"
+var (
+	fileName = "config.ini"
 )
 
 var (
@@ -26,7 +26,7 @@ func init() {
 
 func reload() {
 	config = make(map[string]string)
-	if file, err := os.Open(name); err == nil {
+	if file, err := os.Open(fileName); err == nil {
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -47,10 +47,16 @@ func reload() {
 		}
 		file.Close()
 	}
-	file, err := os.Stat(name)
+	file, err := os.Stat(fileName)
 	if err == nil {
 		lastLoaded = file.ModTime()
 	}
+}
+
+func SetFile(name string) {
+	fileName = name
+	lastLoaded = time.Unix(0, 0)
+	reload()
 }
 
 func GetLastLoaded() time.Time {
@@ -62,7 +68,7 @@ func GetLastLoaded() time.Time {
 func GetString(key, def string) string {
 	mutex.Lock()
 	defer mutex.Unlock()
-	fi, err := os.Stat(name)
+	fi, err := os.Stat(fileName)
 	if err == nil {
 		if fi.ModTime().After(lastLoaded) {
 			reload()
